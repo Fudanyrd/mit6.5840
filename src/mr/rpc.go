@@ -23,6 +23,29 @@ type ExampleReply struct {
 }
 
 // Add your RPC definitions here.
+type MRArgs struct {
+	Task int   // executed task
+	Imap int   // map task id
+	Ird  int   // reduce task id
+}
+
+const (
+	texit int = 0  // task exit
+	tmap  int = 1  // task map
+	trd   int = 2  // task reduce
+	trt   int = 3  // task retry
+)
+
+type MRReply struct {
+	// global member
+	Task int         // one of texit, tmap, trd
+	Reduce int       // total number of reduce task
+	Nfile int        // total number of files = len(files)
+	// task-specific member
+	Filename string  // file name to execute(if map task)
+	Imap int         // assigned map task
+	Ird  int         // assigned reduce task
+}
 
 
 // Cook up a unique-ish UNIX-domain socket name
