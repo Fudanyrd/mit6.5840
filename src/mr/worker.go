@@ -90,8 +90,13 @@ func MapExec(reply *MRReply, mapf func(string, string) []KeyValue) {
 	// dump the statistics into rd files
 	for i := 0; i < rd; i++ {
 		// filename
-		fn := fmt.Sprintf("mp-%d-%d", assign, i);
-		fobj, _ := os.OpenFile(fn, os.O_RDWR | os.O_CREATE, 0644);
+		fn := fmt.Sprintf("mp-%d-%d-tmp", assign, i);
+		fobj, err := os.CreateTemp(".", fn);
+		if err != nil {
+			log.Fatal(err)
+			os.Exit(1);
+		}
+		defer os.Rename(fobj.Name(), fmt.Sprintf("mp-%d-%d", assign, i));
 
 		// json encoder
 		enc := json.NewEncoder(fobj);

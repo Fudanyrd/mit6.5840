@@ -66,7 +66,7 @@ func Timeout(t time.Time) bool {
 	dur := time.Since(t);
 	var sec float64 = dur.Seconds();
 	// timeout after 10.0 seconds;
-	return sec > float64(12.0);
+	return sec > float64(15.0);
 }
 
 // assign a task
