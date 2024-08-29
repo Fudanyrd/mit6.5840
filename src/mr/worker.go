@@ -160,6 +160,7 @@ func CallReal(mrfn MrFunc, rp *MRReply) {
 	// by previous executed task, fill in args.
 	args := MRArgs{};
 	args.Task = rp.Task;
+	args.Id = rp.Id;
 	switch rp.Task {
 	case tmap: args.Imap = rp.Imap;
 	case trd: args.Ird = rp.Ird;

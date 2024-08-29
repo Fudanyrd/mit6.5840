@@ -22,8 +22,10 @@ type Coordinator struct {
 	files []string;  // file names(imut)
 	nrd int;         // number of reduce(imut)
 	smap []int;      // map task status
+	imap []int;      // map task id
 	dmap int;        // # map task completed
 	srd  []int;      // reduce task status
+	ird  []int;      // reduce task id
 	drd  int;        // # reduce task completed
 	// other utility
 	lock sync.Mutex;
@@ -35,16 +37,25 @@ type Coordinator struct {
 func (c *Coordinator) Finish(args *MRArgs) error {
 
 	// simply mark corresponding task as completed.
+	// need to check worker id to make sure a task is "completed"
 	switch args.Task {
 	case tmap: {
-		c.timers[args.Imap] = time.Now();
-		c.smap[args.Imap] = finished;
-		c.dmap++;
+		if c.imap[args.Imap] != args.Id {
+		} else {
+			c.timers[args.Imap] = time.Now();
+			c.smap[args.Imap] = finished;
+			c.dmap++;
+		}
+		return nil;
 	}
 	case trd: {
-		c.timers[args.Ird] = time.Now();
-		c.srd[args.Ird] = finished;
-		c.drd++;
+		if c.ird[args.Ird] != args.Id {
+		} else {
+			c.timers[args.Ird] = time.Now();
+			c.srd[args.Ird] = finished;
+			c.drd++;
+		}
+		return nil;
 	}
 	default:  // exit or sleep, don't care.
 	}
@@ -55,7 +66,7 @@ func Timeout(t time.Time) bool {
 	dur := time.Since(t);
 	var sec float64 = dur.Seconds();
 	// timeout after 10.0 seconds;
-	return sec > float64(10.25);
+	return sec > float64(12.0);
 }
 
 // assign a task
@@ -91,6 +102,8 @@ func (c *Coordinator) Assign(reply *MRReply) error {
 		if tid == -1 {
 			reply.Task = trt;
 		} else {
+			c.imap[tid]++;
+			reply.Id = c.imap[tid];
 			reply.Task = tmap;
 			reply.Filename = c.files[tid];
 		}
@@ -128,6 +141,8 @@ func (c *Coordinator) Assign(reply *MRReply) error {
 		if tid < 0 {
 			reply.Task = trt;
 		} else {
+			c.ird[tid]++;
+			reply.Id = c.ird[tid];
 			reply.Task = trd;
 		}
 		return nil;
@@ -143,6 +158,7 @@ func (c *Coordinator) Real(args *MRArgs, reply *MRReply) error {
 	c.lock.Lock();
 	c.Finish(args);
 	c.Assign(reply);
+	// fmt.Println(*reply);
 	c.lock.Unlock();
 
 	return nil;
@@ -204,7 +220,9 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c.files = files;
 	c.nrd = nReduce;
 	c.smap = make([]int, len(files));
+	c.imap = make([]int, len(files));
 	c.srd = make([]int, nReduce);
+	c.ird = make([]int, nReduce);
 	if len(files) < nReduce {
 		// unlikely, but possible
 		c.timers = make([]time.Time, nReduce);

@@ -27,6 +27,7 @@ type MRArgs struct {
 	Task int   // executed task
 	Imap int   // map task id
 	Ird  int   // reduce task id
+	Id   int         // indentifying field
 }
 
 const (
@@ -39,6 +40,7 @@ const (
 type MRReply struct {
 	// global member
 	Task int         // one of texit, tmap, trd
+	Id   int         // indentifying field
 	Reduce int       // total number of reduce task
 	Nfile int        // total number of files = len(files)
 	// task-specific member
